@@ -1,0 +1,6 @@
+--- LSTM Model Evaluation Metrics ---
+Accuracy: 0.9500
+Precision: 0.9149
+Recall: 0.8776
+F1-Score: 0.8958
+ROC-AUC: 0.9896
