@@ -1,0 +1,10 @@
+--- Model Evaluation Metrics ---
+Accuracy: 0.9950
+Precision: 1.0000
+Recall: 0.9796
+F1-Score: 0.9897
+ROC-AUC: 1.0000
+
+--- Confusion Matrix ---
+[[151   0]
+ [  1  48]]
