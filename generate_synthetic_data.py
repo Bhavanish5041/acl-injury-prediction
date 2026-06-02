@@ -2,66 +2,49 @@ import pandas as pd
 import numpy as np
 import os
 
-def generate_data(num_samples=1000):
+def generate_data(num_samples=2000):
     np.random.seed(42)
     
     # 0 = Low Risk, 1 = High Risk
-    # Let's say 25% of the samples are high risk
-    injury_risk = np.random.choice([0, 1], size=num_samples, p=[0.75, 0.25])
+    injury_risk = np.random.choice([0, 1], size=num_samples, p=[0.7, 0.3])
     
-    # Generate features based on risk class to create a realistic separability
+    # Features (Simulating realistic biomechanical angles from CV)
     
-    # 1. Knee Valgus Angle (degrees) - High risk > 10-15 degrees
-    knee_valgus = np.where(injury_risk == 1, 
-                           np.random.normal(loc=14.0, scale=3.5, size=num_samples), 
-                           np.random.normal(loc=5.0, scale=2.5, size=num_samples))
+    # Knee Flexion (High risk = stiff landing < 25 degrees)
+    left_knee_flexion = np.where(injury_risk == 1, np.random.normal(20, 5, num_samples), np.random.normal(45, 8, num_samples))
+    right_knee_flexion = np.where(injury_risk == 1, np.random.normal(22, 6, num_samples), np.random.normal(44, 8, num_samples))
     
-    # 2. Knee Flexion at Initial Contact (degrees) - High risk < 20 degrees
-    knee_flexion_ic = np.where(injury_risk == 1, 
-                               np.random.normal(loc=15.0, scale=4.0, size=num_samples), 
-                               np.random.normal(loc=28.0, scale=5.0, size=num_samples))
+    # Knee Valgus Deviation from straight (High risk = high deviation > 10 degrees)
+    left_knee_valgus = np.where(injury_risk == 1, np.random.normal(12, 4, num_samples), np.random.normal(3, 2, num_samples))
+    right_knee_valgus = np.where(injury_risk == 1, np.random.normal(15, 5, num_samples), np.random.normal(4, 2, num_samples))
     
-    # 3. Peak Vertical Ground Reaction Force (normalized to body weight, xBW) - High risk > 2.5
-    peak_grf = np.where(injury_risk == 1, 
-                        np.random.normal(loc=2.8, scale=0.4, size=num_samples), 
-                        np.random.normal(loc=2.0, scale=0.3, size=num_samples))
+    # Hip Flexion
+    left_hip_flexion = np.where(injury_risk == 1, np.random.normal(30, 10, num_samples), np.random.normal(50, 15, num_samples))
+    right_hip_flexion = np.where(injury_risk == 1, np.random.normal(32, 10, num_samples), np.random.normal(52, 15, num_samples))
     
-    # 4. Hip Internal Rotation (degrees) - High risk > 10
-    hip_internal_rot = np.where(injury_risk == 1, 
-                                np.random.normal(loc=12.0, scale=4.0, size=num_samples), 
-                                np.random.normal(loc=5.0, scale=3.0, size=num_samples))
+    # Asymmetry Features
+    knee_asymmetry = np.abs(left_knee_flexion - right_knee_flexion) + np.abs(left_knee_valgus - right_knee_valgus)
+    hip_asymmetry = np.abs(left_hip_flexion - right_hip_flexion)
     
-    # 5. Trunk Lateral Flexion (degrees) - High risk > 8
-    trunk_flexion = np.where(injury_risk == 1, 
-                             np.random.normal(loc=9.0, scale=3.0, size=num_samples), 
-                             np.random.normal(loc=4.0, scale=2.0, size=num_samples))
+    # Joint Velocity (Approximation of impact speed - higher is riskier)
+    joint_velocity = np.where(injury_risk == 1, np.random.normal(5.5, 1.2, num_samples), np.random.normal(3.0, 0.8, num_samples))
     
-    # Add some noise features (uncorrelated with injury risk)
-    age = np.random.randint(18, 30, size=num_samples)
-    height_cm = np.random.normal(175, 10, size=num_samples)
-    weight_kg = np.random.normal(70, 12, size=num_samples)
-    
-    # Compile into a DataFrame
     df = pd.DataFrame({
-        'athlete_id': range(1, num_samples + 1),
-        'age': age,
-        'height_cm': height_cm,
-        'weight_kg': weight_kg,
-        'knee_valgus_angle': knee_valgus,
-        'knee_flexion_ic': knee_flexion_ic,
-        'peak_grf_bw': peak_grf,
-        'hip_internal_rotation': hip_internal_rot,
-        'trunk_lateral_flexion': trunk_flexion,
+        'left_knee_flexion': left_knee_flexion,
+        'right_knee_flexion': right_knee_flexion,
+        'left_knee_valgus': left_knee_valgus,
+        'right_knee_valgus': right_knee_valgus,
+        'left_hip_flexion': left_hip_flexion,
+        'right_hip_flexion': right_hip_flexion,
+        'knee_asymmetry': knee_asymmetry,
+        'hip_asymmetry': hip_asymmetry,
+        'joint_velocity': joint_velocity,
         'injury_risk': injury_risk
     })
     
-    # Add some non-linear interaction noise to make it harder
-    # e.g., if height is very tall and valgus is high, risk goes up
-    
     os.makedirs('data', exist_ok=True)
-    df.to_csv('data/biomechanics_synthetic.csv', index=False)
-    print(f"Generated synthetic dataset with {num_samples} samples at data/biomechanics_synthetic.csv")
-    print(df['injury_risk'].value_counts())
+    df.to_csv('data/cv_biomechanics.csv', index=False)
+    print(f"Generated vision-based synthetic dataset at data/cv_biomechanics.csv")
 
 if __name__ == "__main__":
     generate_data()
